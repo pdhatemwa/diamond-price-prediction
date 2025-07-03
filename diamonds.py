@@ -9,3 +9,5 @@ df = pd.read_csv(data)
 print(df.head(10))
 print(df.shape)
 print(df.columns)
+
+print("hi ayden")
