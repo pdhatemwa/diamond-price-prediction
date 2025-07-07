@@ -1,4 +1,5 @@
 import pandas as pd 
+import numpy as np 
 import seaborn as sns 
 import matplotlib.pyplot as plt 
 import streamlit as st
@@ -253,7 +254,7 @@ plt.title('Feature Correlation with Diamond Price')
 plt.xlabel('Correlation Coefficient')
 plt.ylabel('Feature')
 plt.tight_layout()
-plt.show() # From the results, we will be using carat, z, and color.
+# plt.show() # From the results, we will be using carat, z, and color.
 
 # PHASE 3 : Model building and Pre-processing!
 
@@ -298,13 +299,21 @@ y_pred = model.predict(X_test)
 # After creating some predictions, we can now evaluate the model performance.
 mse = mean_squared_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
+rmse = np.sqrt(mse)
 
+print(f"Root Mean Squared Error: {rmse:.2f}")
 print(f"Mean Squared Error: {mse:.2f}")
 print(f"R-squared Score: {r2:.2f}")
+
+# Results 
+# Root Mean Squared Error: 1471.32
+# Mean Squared Error: 2164788.68
+# R-squared Score: 0.86
 
 # Interpretation of results.
 """ 
 What do these mean?
+
 Mean Squared Error (MSE): Measures how far predictions are from actual values. Lower is better.
 
 R² Score: Proportion of variance in price explained by the features.
