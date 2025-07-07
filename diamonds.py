@@ -252,7 +252,7 @@ plt.title('Feature Correlation with Diamond Price')
 plt.xlabel('Correlation Coefficient')
 plt.ylabel('Feature')
 plt.tight_layout()
-plt.show() # From the results, we will be using carat, z, and color.
+plt.show() # From the results, we will be using carat, z, and the color.
 
 
 
