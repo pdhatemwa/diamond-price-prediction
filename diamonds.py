@@ -2,6 +2,79 @@ import pandas as pd
 import seaborn as sns 
 import matplotlib.pyplot as plt 
 import streamlit as st
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import pickle
+
+st.set_page_config(page_title="💎 Diamond Price Estimator", page_icon="💰", 
+                   layout="centered")
+
+# Sidebar: branding
+st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width=200)
+st.sidebar.title("Kamusi Data Lab")
+st.sidebar.markdown("Predict your diamond's price using Machine Learning 💻")
+
+# Main Title
+st.title("💎 Diamond Price Prediction App")
+st.markdown("""
+<style>
+.big-font {
+    font-size:20px;
+    font-weight:600;
+    color:#2f4f4f;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', unsafe_allow_html=True)
+
+# Layout input columns
+col1, col2 = st.columns(2)
+
+with col1:
+    carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
+    depth = st.slider("Depth %", 50.0, 70.0, 61.0, 0.1)
+    cut = st.selectbox("Cut", ["Ideal", "Premium", "Very Good", "Good", "Fair"])
+    clarity = st.selectbox("Clarity", ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"])
+
+with col2:
+    table = st.slider("Table %", 50.0, 70.0, 57.0, 0.1)
+    x = st.slider("Length (mm)", 3.0, 10.0, 5.0, 0.1)
+    y = st.slider("Width (mm)", 3.0, 10.0, 5.0, 0.1)
+    z = st.slider("Height (mm)", 2.0, 6.0, 3.0, 0.1)
+    color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
+
+# Convert input to model-ready format
+input_dict = {
+    'carat': carat,
+    'depth': depth,
+    'table': table,
+    'x': x,
+    'y': y,
+    'z': z,
+    'cut_Premium': int(cut == 'Premium'),
+    'cut_Very Good': int(cut == 'Very Good'),
+    'cut_Good': int(cut == 'Good'),
+    'cut_Fair': int(cut == 'Fair'),
+    'color_E': int(color == 'E'),
+    'color_F': int(color == 'F'),
+    'color_G': int(color == 'G'),
+    'color_H': int(color == 'H'),
+    'color_I': int(color == 'I'),
+    'color_J': int(color == 'J'),
+    'clarity_VVS1': int(clarity == 'VVS1'),
+    'clarity_VVS2': int(clarity == 'VVS2'),
+    'clarity_VS1': int(clarity == 'VS1'),
+    'clarity_VS2': int(clarity == 'VS2'),
+    'clarity_SI1': int(clarity == 'SI1'),
+    'clarity_SI2': int(clarity == 'SI2'),
+    'clarity_I1': int(clarity == 'I1')
+}
+
+input_df = pd.DataFrame([input_dict])
+
+st.info("✨ Model not yet connected. This is just a front end preview")
+
 
 # PHASE 1
 # Data acquisition and exploration.
