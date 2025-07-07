@@ -339,7 +339,10 @@ print(f"R-squared Score: {r2:.2f}")
 # > 0.7 is generally good for regression
 # """
 
-
+# Create a functional button that the user presses to predict the diamond prices.
+if st.button("Predict price"):
+     predicted_price = model.predict(df_encoded)[0]
+     st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f} currency units.")
 
 
 
