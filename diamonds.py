@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 import pickle
 
 st.set_page_config(page_title="💎 Diamond Price Estimator", page_icon="💰", 
-                   layout="centered")
+               layout="centered")
 
 # Sidebar: branding
 st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width=200)
@@ -19,9 +20,9 @@ st.title("💎 Diamond Price Prediction App")
 st.markdown("""
 <style>
 .big-font {
-    font-size:20px;
-    font-weight:600;
-    color:#2f4f4f;
+     font-size:20px;
+     font-weight:600;
+     color:#2f4f4f;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -32,43 +33,43 @@ st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', uns
 col1, col2 = st.columns(2)
 
 with col1:
-    carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
-    depth = st.slider("Depth %", 50.0, 70.0, 61.0, 0.1)
-    cut = st.selectbox("Cut", ["Ideal", "Premium", "Very Good", "Good", "Fair"])
-    clarity = st.selectbox("Clarity", ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"])
+     carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
+     depth = st.slider("Depth %", 50.0, 70.0, 61.0, 0.1)
+     cut = st.selectbox("Cut", ["Ideal", "Premium", "Very Good", "Good", "Fair"])
+     clarity = st.selectbox("Clarity", ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"])
 
 with col2:
-    table = st.slider("Table %", 50.0, 70.0, 57.0, 0.1)
-    x = st.slider("Length (mm)", 3.0, 10.0, 5.0, 0.1)
-    y = st.slider("Width (mm)", 3.0, 10.0, 5.0, 0.1)
-    z = st.slider("Height (mm)", 2.0, 6.0, 3.0, 0.1)
-    color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
+     table = st.slider("Table %", 50.0, 70.0, 57.0, 0.1)
+     x = st.slider("Length (mm)", 3.0, 10.0, 5.0, 0.1)
+     y = st.slider("Width (mm)", 3.0, 10.0, 5.0, 0.1)
+     z = st.slider("Height (mm)", 2.0, 6.0, 3.0, 0.1)
+     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
 
 # Convert input to model-ready format
 input_dict = {
-    'carat': carat,
-    'depth': depth,
-    'table': table,
-    'x': x,
-    'y': y,
-    'z': z,
-    'cut_Premium': int(cut == 'Premium'),
-    'cut_Very Good': int(cut == 'Very Good'),
-    'cut_Good': int(cut == 'Good'),
-    'cut_Fair': int(cut == 'Fair'),
-    'color_E': int(color == 'E'),
-    'color_F': int(color == 'F'),
-    'color_G': int(color == 'G'),
-    'color_H': int(color == 'H'),
-    'color_I': int(color == 'I'),
-    'color_J': int(color == 'J'),
-    'clarity_VVS1': int(clarity == 'VVS1'),
-    'clarity_VVS2': int(clarity == 'VVS2'),
-    'clarity_VS1': int(clarity == 'VS1'),
-    'clarity_VS2': int(clarity == 'VS2'),
-    'clarity_SI1': int(clarity == 'SI1'),
-    'clarity_SI2': int(clarity == 'SI2'),
-    'clarity_I1': int(clarity == 'I1')
+     'carat': carat,
+     'depth': depth,
+     'table': table,
+     'x': x,
+     'y': y,
+     'z': z,
+     'cut_Premium': int(cut == 'Premium'),
+     'cut_Very Good': int(cut == 'Very Good'),
+     'cut_Good': int(cut == 'Good'),
+     'cut_Fair': int(cut == 'Fair'),
+     'color_E': int(color == 'E'),
+     'color_F': int(color == 'F'),
+     'color_G': int(color == 'G'),
+     'color_H': int(color == 'H'),
+     'color_I': int(color == 'I'),
+     'color_J': int(color == 'J'),
+     'clarity_VVS1': int(clarity == 'VVS1'),
+     'clarity_VVS2': int(clarity == 'VVS2'),
+     'clarity_VS1': int(clarity == 'VS1'),
+     'clarity_VS2': int(clarity == 'VS2'),
+     'clarity_SI1': int(clarity == 'SI1'),
+     'clarity_SI2': int(clarity == 'SI2'),
+     'clarity_I1': int(clarity == 'I1')
 }
 
 input_df = pd.DataFrame([input_dict])
@@ -252,11 +253,68 @@ plt.title('Feature Correlation with Diamond Price')
 plt.xlabel('Correlation Coefficient')
 plt.ylabel('Feature')
 plt.tight_layout()
-plt.show() # From the results, we will be using carat, z, and the color.
+plt.show() # From the results, we will be using carat, z, and color.
+
+# PHASE 3 : Model building and Pre-processing!
+
+# We shall be using the linear regression model and the relevant libraries have been imported.
+# We shall evaluate the model using the mean squared error, r-squared score
+
+# Create a copy of the original dataset, such that we may refer to it later if need be.
+df_cleaned = df.copy()
+
+# Keep only the selected features from the engineering process and the target as well.
+df_cleaned = df_cleaned[['carat', 'z', 'color', 'price']]
+
+# We then encode 'color' as categorical codes.
+df_cleaned['color'] = df_cleaned['color'].astype('category').cat.codes
+
+# Here we can now define the dependant variables and the independent variables according tp
+# the selected features (3 in number) and the target feature (price).
+X = df_cleaned[['carat', 'z', 'color']]
+y = df_cleaned['price']
+
+# Let's go on to split the data into training data and validation data.
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+
+# random_state = 42 means, It's just a common nerd joke — from The Hitchhiker’s Guide to the Galaxy, 
+# where “42” is the answer to the ultimate question of life
+# But any number can be used — like 1, 999, etc. 
+# It just has to be the same every time for reproducibility.
+
+# test_size = 0.2 means, we have dictated that the testing data is 20% of the dataset,
+# as opposed to the default 75-25 by python. Meaning, for every 100 diamonds in the dataset,
+# 80 train, while 20 test.
+
+# We can now train the model.
+model = LinearRegression() # We chose linear regression due to the instructions in the question.
+model.fit(X_train, y_train) # We fit the model using the training data.
+# This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
+
+# Let us now make some predictions.
+y_pred = model.predict(X_test)
 
 
+# After creating some predictions, we can now evaluate the model performance.
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
 
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R-squared Score: {r2:.2f}")
 
+# Interpretation of results.
+""" 
+What do these mean?
+Mean Squared Error (MSE): Measures how far predictions are from actual values. Lower is better.
+
+R² Score: Proportion of variance in price explained by the features.
+
+1.0 = perfect prediction
+
+0 = model does no better than mean
+
+> 0.7 is generally good for regression
+"""
 
 
 
