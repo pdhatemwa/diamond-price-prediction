@@ -256,7 +256,14 @@ price_corr_sorted = price_corr.sort_values(ascending=True)  # Ascending for hori
 
 # Plot
 plt.figure(figsize=(10, 6))
-sns.barplot(x=price_corr_sorted, y=price_corr_sorted.index, palette='coolwarm')
+sns.barplot(
+     x=price_corr_sorted,
+     y=price_corr_sorted.index,
+     hue=price_corr_sorted.index,  # Assign hue
+     palette='coolwarm',
+     dodge=False,                  # Keeps it as a single bar per row
+     legend=False                  # Optional: turns off extra legend
+)
 plt.title('Feature Correlation with Diamond Price')
 plt.xlabel('Correlation Coefficient')
 plt.ylabel('Feature')
