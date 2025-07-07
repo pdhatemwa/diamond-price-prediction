@@ -81,7 +81,8 @@ st.info("✨ Model not yet connected. This is just a front end preview")
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
+# "C:\Users\patri\Downloads\diamonds.csv.zip"
+data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
 
