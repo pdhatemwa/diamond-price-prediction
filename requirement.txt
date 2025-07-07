@@ -3,3 +3,6 @@ scikit-learn
 matplotlib
 pandas
 RandomForestRegressor    
+numpy
+pickle
+seaborn
