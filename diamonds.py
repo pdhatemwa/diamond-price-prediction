@@ -6,13 +6,13 @@ import streamlit as st
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
-import pickle
 
-st.set_page_config(page_title = "💎 Diamond Price Estimator", page_icon = "💰", 
-               layout="centered")
+# ------------------------- STREAMLIT SETUP -------------------------- #
+
+st.set_page_config(page_title="💎 Diamond Price Estimator", page_icon="💰", layout="centered")
 
 # Sidebar: branding
-st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width = 200)
+st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width=200)
 st.sidebar.title("Kamusi Data Lab")
 st.sidebar.markdown("Predict your diamond's price using Machine Learning 💻")
 
@@ -30,58 +30,25 @@ st.markdown("""
 
 st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', unsafe_allow_html=True)
 
+
+# -------------------------- USER INPUT -------------------------- #
+
 # Layout input columns
 col1, col2 = st.columns(2)
 
 with col1:
      carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
-     depth = st.slider("Depth %", 50.0, 70.0, 61.0, 0.1)
-     cut = st.selectbox("Cut", ["Ideal", "Premium", "Very Good", "Good", "Fair"])
-     clarity = st.selectbox("Clarity", ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"])
+     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
+     z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
 
 with col2:
-     table = st.slider("Table %", 50.0, 70.0, 57.0, 0.1)
-     x = st.slider("Length (mm)", 3.0, 10.0, 5.0, 0.1)
-     y = st.slider("Width (mm)", 3.0, 10.0, 5.0, 0.1)
-     z = st.slider("Height (mm)", 2.0, 6.0, 3.0, 0.1)
-     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
+     st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
 
-# Convert input to model-ready format
-input_dict = {
-     'carat': carat,
-     'depth': depth,
-     'table': table,
-     'x': x,
-     'y': y,
-     'z': z,
-     'cut_Premium': int(cut == 'Premium'),
-     'cut_Very Good': int(cut == 'Very Good'),
-     'cut_Good': int(cut == 'Good'),
-     'cut_Fair': int(cut == 'Fair'),
-     'color_E': int(color == 'E'),
-     'color_F': int(color == 'F'),
-     'color_G': int(color == 'G'),
-     'color_H': int(color == 'H'),
-     'color_I': int(color == 'I'),
-     'color_J': int(color == 'J'),
-     'clarity_VVS1': int(clarity == 'VVS1'),
-     'clarity_VVS2': int(clarity == 'VVS2'),
-     'clarity_VS1': int(clarity == 'VS1'),
-     'clarity_VS2': int(clarity == 'VS2'),
-     'clarity_SI1': int(clarity == 'SI1'),
-     'clarity_SI2': int(clarity == 'SI2'),
-     'clarity_I1': int(clarity == 'I1')
-}
-
-input_df = pd.DataFrame([input_dict])
-
-st.info("✨ Model not yet connected. This is just a front end preview")
 
 
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-# "C:\Users\patri\Downloads\diamonds.csv.zip"
 data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
@@ -121,7 +88,7 @@ print(df.describe()) # For some descriptive statistics.
 # max        5.010000     79.000000     95.000000  18823.000000     10.740000     58.900000     31.800000 
 # """
 
-# 1. b) Explanatory data analysis.(EDA)
+# 1. b) Explanatory data analysis.
 
 print(df.isnull().sum().sort_values(ascending = False))
 # This will show me the number of empty cells per row with
@@ -210,7 +177,7 @@ plt.tight_layout()
 
 # 2) x, y, z (note: these are strongly correlated with carat, so might be redundant — more on that below)
 
-# High risk of Multicollinearity 
+# High risk of Multi-collinearity 
 # Check this:
 
 # carat vs x: 0.98
