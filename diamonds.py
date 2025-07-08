@@ -121,7 +121,7 @@ print(df.describe()) # For some descriptive statistics.
 # max        5.010000     79.000000     95.000000  18823.000000     10.740000     58.900000     31.800000 
 # """
 
-# 1. b) Explanatory data analysis.
+# 1. b) Explanatory data analysis.(EDA)
 
 print(df.isnull().sum().sort_values(ascending = False))
 # This will show me the number of empty cells per row with
