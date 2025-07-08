@@ -50,9 +50,6 @@ with col2:
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-<<<<<<< HEAD
-df = pd.read_csv("diamonds.csv", index_col=0)
-=======
 data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
