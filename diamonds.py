@@ -214,23 +214,23 @@ plt.tight_layout()
 # For this case, I will use "CARAT", "Z", and "COLOR"
 # """
 
-# We now generate a feature importance barplot to further check the outcome of the heat map results.
+# We now generate a feature importance bar plot to further check the outcome of the heat map results.
 # Compute correlation matrix
 corr_matrix = df_encoded.corr()
 
 # Get correlation with 'price' and sort
 price_corr = corr_matrix['price'].drop('price')  # Remove self-correlation (1.0)
-price_corr_sorted = price_corr.sort_values(ascending=True)  # Ascending for horizontal bars
+price_corr_sorted = price_corr.sort_values(ascending = True)  # Ascending for horizontal bars
 
 # Plot
 plt.figure(figsize=(10, 6))
 sns.barplot(
-     x=price_corr_sorted,
-     y=price_corr_sorted.index,
-     hue=price_corr_sorted.index,  # Assign hue
-     palette='coolwarm',
-     dodge=False,                  # Keeps it as a single bar per row
-     legend=False                  # Optional: turns off extra legend
+     x = price_corr_sorted,
+     y = price_corr_sorted.index,
+     hue = price_corr_sorted.index,  # Assign hue
+     palette = 'coolwarm',
+     dodge = False,                  # Keeps it as a single bar per row
+     legend = False                  # Optional: turns off extra legend
 )
 plt.title('Feature Correlation with Diamond Price')
 plt.xlabel('Correlation Coefficient')
@@ -273,9 +273,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, rando
 model = LinearRegression() # We chose linear regression due to the instructions in the question.
 model.fit(X_train, y_train) # We fit the model using the training data.
 # This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
+color_categories = df['color'].astype('category').cat.categories
+color = st.selectbox("Color", color_categories)
+color_code = list(color_categories).index(color)
+# X_input = np.array([[carat, z, color_code]])
+X_input = pd.DataFrame([[carat, z, color_code]], columns=['carat', 'z', 'color'])
 
 # Let us now make some predictions.
-y_pred = model.predict(X_test)
+y_pred = model.predict(X_input)[0]
 
 
 # After creating some predictions, we can now evaluate the model performance.
@@ -309,8 +314,8 @@ print(f"R-squared Score: {r2:.2f}")
 
 # Create a functional button that the user presses to predict the diamond prices.
 if st.button("Predict price"):
-     predicted_price = model.predict(df_encoded)[0]
-     st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f} ")
+     price = model.predict(X_input)[0]  # single float
+     st.success(f"Estimated price of the diamond specified : ${price:,.2f} ")
 
 
 
