@@ -6,13 +6,13 @@ import streamlit as st
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+import pickle
 
-# ------------------------- STREAMLIT SETUP -------------------------- #
-
-st.set_page_config(page_title="💎 Diamond Price Estimator", page_icon="💰", layout="centered")
+st.set_page_config(page_title = "💎 Diamond Price Estimator", page_icon = "💰", 
+               layout="centered")
 
 # Sidebar: branding
-st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width=200)
+st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width = 200)
 st.sidebar.title("Kamusi Data Lab")
 st.sidebar.markdown("Predict your diamond's price using Machine Learning 💻")
 
@@ -30,27 +30,59 @@ st.markdown("""
 
 st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', unsafe_allow_html=True)
 
-
-# -------------------------- USER INPUT -------------------------- #
-
 # Layout input columns
 col1, col2 = st.columns(2)
 
 with col1:
      carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
-     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
-     z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
+     depth = st.slider("Depth %", 50.0, 70.0, 61.0, 0.1)
+     cut = st.selectbox("Cut", ["Ideal", "Premium", "Very Good", "Good", "Fair"])
+     clarity = st.selectbox("Clarity", ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"])
 
 with col2:
-    st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
+     table = st.slider("Table %", 50.0, 70.0, 57.0, 0.1)
+     x = st.slider("Length (mm)", 3.0, 10.0, 5.0, 0.1)
+     y = st.slider("Width (mm)", 3.0, 10.0, 5.0, 0.1)
+     z = st.slider("Height (mm)", 2.0, 6.0, 3.0, 0.1)
+     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
 
+# Convert input to model-ready format
+input_dict = {
+     'carat': carat,
+     'depth': depth,
+     'table': table,
+     'x': x,
+     'y': y,
+     'z': z,
+     'cut_Premium': int(cut == 'Premium'),
+     'cut_Very Good': int(cut == 'Very Good'),
+     'cut_Good': int(cut == 'Good'),
+     'cut_Fair': int(cut == 'Fair'),
+     'color_E': int(color == 'E'),
+     'color_F': int(color == 'F'),
+     'color_G': int(color == 'G'),
+     'color_H': int(color == 'H'),
+     'color_I': int(color == 'I'),
+     'color_J': int(color == 'J'),
+     'clarity_VVS1': int(clarity == 'VVS1'),
+     'clarity_VVS2': int(clarity == 'VVS2'),
+     'clarity_VS1': int(clarity == 'VS1'),
+     'clarity_VS2': int(clarity == 'VS2'),
+     'clarity_SI1': int(clarity == 'SI1'),
+     'clarity_SI2': int(clarity == 'SI2'),
+     'clarity_I1': int(clarity == 'I1')
+}
 
-# ----------------- LOAD DATA --------------------- #
+input_df = pd.DataFrame([input_dict])
+
+st.info("✨ Model not yet connected. This is just a front end preview")
+
 
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
+# "C:\Users\patri\Downloads\diamonds.csv.zip"
+data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
 
@@ -74,22 +106,8 @@ print(data_types) # Investigating the data types in the dataset
 # z             float64
 # """
 
-# df = df.drop(columns=['Unnamed: 0']) # To eliminate the first column showing row indexes. 
-
+df = df.drop(columns=['Unnamed: 0']) # To eliminate the first column showing row indexes. 
 print(df.describe()) # For some descriptive statistics.
-<<<<<<< HEAD
-""" 
-          carat         depth         table         price             x             y             z
-count  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000
-mean       0.797940     61.749405     57.457184   3932.799722      5.731157      5.734526      3.538734
-std        0.474011      1.432621      2.234491   3989.439738      1.121761      1.142135      0.705699
-min        0.200000     43.000000     43.000000    326.000000      0.000000      0.000000      0.000000
-25%        0.400000     61.000000     56.000000    950.000000      4.710000      4.720000      2.910000
-50%        0.700000     61.800000     57.000000   2401.000000      5.700000      5.710000      3.530000
-75%        1.040000     62.500000     59.000000   5324.250000      6.540000      6.540000      4.040000
-max        5.010000     79.000000     95.000000  18823.000000     10.740000     58.900000     31.800000 
-"""
-=======
 
 # """ 
 #           carat         depth         table         price             x             y             z
@@ -102,7 +120,6 @@ max        5.010000     79.000000     95.000000  18823.000000     10.740000     
 # 75%        1.040000     62.500000     59.000000   5324.250000      6.540000      6.540000      4.040000
 # max        5.010000     79.000000     95.000000  18823.000000     10.740000     58.900000     31.800000 
 # """
->>>>>>> 1a879db6111ba9bb8c1968fd633f9a1c57504627
 
 # 1. b) Explanatory data analysis.
 
@@ -157,7 +174,6 @@ for column in df.columns:
 # But if it wasn't then we would simply use the .fillna() method and the .join() method to fill the empty cells with the mode/median/mean of the given column.
 
 
-# ----------------- MODEL PREP --------------------- #
 
 # PHASE 2
 # Feature engineering and pre-processing. 
@@ -261,8 +277,10 @@ plt.tight_layout()
 # We shall evaluate the model using the mean squared error, r-squared score
 
 # Create a copy of the original dataset, such that we may refer to it later if need be.
-# Keeping only relevant features
-df_cleaned = df[["carat", "z", "color", "price"]].copy()
+df_cleaned = df.copy()
+
+# Keep only the selected features from the engineering process and the target as well.
+df_cleaned = df_cleaned[['carat', 'z', 'color', 'price']]
 
 # We then encode 'color' as categorical codes.
 df_cleaned['color'] = df_cleaned['color'].astype('category').cat.codes
@@ -289,33 +307,18 @@ model = LinearRegression() # We chose linear regression due to the instructions 
 model.fit(X_train, y_train) # We fit the model using the training data.
 # This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
 
-# ----------------- INPUT PROCESSING --------------------- #
-
-# Encode color
-color_mapping = {'D': 0, 'E': 1, 'F': 2, 'G': 3, 'H': 4, 'I': 5, 'J': 6}
-color_encoded = color_mapping[color]
-
-input_data = pd.DataFrame([[carat, z, color_encoded]], columns=['carat', 'z', 'color'])
-
-
-# ----------------- PREDICTION --------------------- #
 # Let us now make some predictions.
-prediction = model.predict(input_data)
-st.success(f"Estimated Diamond Price: $ {prediction[0]:,.2f}")
+y_pred = model.predict(X_test)
 
 
-# ----------------- OPTIONAL METRICS --------------------- #
 # After creating some predictions, we can now evaluate the model performance.
-mse = mean_squared_error(y_test, model.predict(X_test))
-r2 = r2_score(y_test, model.predict(X_test))
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
 rmse = np.sqrt(mse)
 
-st.markdown(f"""
-### 📈 Model Performance:
-- **R-squared Score:** {r2:.2f}
-- **Root Mean Squared Error:** ${rmse:.2f}
-- **Mean Squared Error:** {mse:,.2f}
-""")
+print(f"Root Mean Squared Error: {rmse:.2f}")
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R-squared Score: {r2:.2f}")
 
 # Results 
 # Root Mean Squared Error: 1471.32
@@ -330,14 +333,6 @@ st.markdown(f"""
 
 # R² Score: Proportion of variance in price explained by the features.
 
-<<<<<<< HEAD
-1.0 = perfect prediction
-
-0 = model does no better than mean
-
-> 0.7 is generally good for regression
-"""
-=======
 # 1.0 = perfect prediction
 
 # 0 = model does no better than mean
@@ -395,4 +390,3 @@ if st.button("Predict price"):
 
 
 
->>>>>>> 1a879db6111ba9bb8c1968fd633f9a1c57504627
