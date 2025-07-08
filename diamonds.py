@@ -53,7 +53,6 @@ with col2:
 data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
->>>>>>> 1a879db6111ba9bb8c1968fd633f9a1c57504627
 
 print(df.head(10)) # The data looks good
 print(df.shape) # (53940 rows, 11 columns) Good data to work with
