@@ -32,13 +32,16 @@ st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', uns
 
 
 # -------------------------- USER INPUT -------------------------- #
-
+data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
+df = pd.read_csv(data) 
 # Layout input columns
 col1, col2 = st.columns(2)
 
 with col1:
      carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
+     color_categories = df['color'].astype('category').cat.categories
      color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
+     color_code = list(color_categories).index(color)
      z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
 
 with col2:
@@ -49,8 +52,8 @@ with col2:
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
-df = pd.read_csv(data) # Convert csv into dataframe using pandas.
+# data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
+# df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
 
 print(df.head(10)) # The data looks good
@@ -252,45 +255,47 @@ df_cleaned = df_cleaned[['carat', 'z', 'color', 'price']]
 # We then encode 'color' as categorical codes.
 df_cleaned['color'] = df_cleaned['color'].astype('category').cat.codes
 
-# Here we can now define the dependant variables and the independent variables according tp
+# Here we can now define the dependant variables and the independent variables according to
 # the selected features (3 in number) and the target feature (price).
 X = df_cleaned[['carat', 'z', 'color']]
 y = df_cleaned['price']
 
 # Let's go on to split the data into training data and validation data.
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 42)
 
 # random_state = 42 means, It's just a common nerd joke — from The Hitchhiker’s Guide to the Galaxy, 
 # where “42” is the answer to the ultimate question of life
 # But any number can be used — like 1, 999, etc. 
 # It just has to be the same every time for reproducibility.
 
-# test_size = 0.2 means, we have dictated that the testing data is 20% of the dataset,
-# as opposed to the default 75-25 by python. Meaning, for every 100 diamonds in the dataset,
-# 80 train, while 20 test.
+# test_size = 0.25 means, we have dictated that the testing data is 25% of the dataset,
+# which is the default 75-25 by python. Meaning, for every 100 diamonds in the dataset,
+# 75 train, while 25 test.
 
 # We can now train the model.
 model = LinearRegression() # We chose linear regression due to the instructions in the question.
 model.fit(X_train, y_train) # We fit the model using the training data.
 # This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
-color_categories = df['color'].astype('category').cat.categories
-color = st.selectbox("Color", color_categories)
-color_code = list(color_categories).index(color)
-# X_input = np.array([[carat, z, color_code]])
-X_input = pd.DataFrame([[carat, z, color_code]], columns=['carat', 'z', 'color'])
 
-# Let us now make some predictions.
-y_pred = model.predict(X_input)[0]
 
+
+# Create a properly shaped input DataFrame
+X_input = pd.DataFrame([[carat, z, color_code]], columns = ['carat', 'z', 'color'])
+
+# Create a functional button that the user presses to predict the diamond prices.
+if st.button("Predict price"):
+     y_pred = model.predict(X_input)[0] # Extract float
+     y_pred = max(y_pred, 0)
+     st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f}")
 
 # After creating some predictions, we can now evaluate the model performance.
-mse = mean_squared_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
-rmse = np.sqrt(mse)
+# mse = mean_squared_error(y_test, y_pred)
+# r2 = r2_score(y_test, y_pred)
+# rmse = np.sqrt(mse)
 
-print(f"Root Mean Squared Error: {rmse:.2f}")
-print(f"Mean Squared Error: {mse:.2f}")
-print(f"R-squared Score: {r2:.2f}")
+# print(f"Root Mean Squared Error: {rmse:.2f}")
+# print(f"Mean Squared Error: {mse:.2f}")
+# print(f"R-squared Score: {r2:.2f}")
 
 # Results 
 # Root Mean Squared Error: 1471.32
@@ -311,15 +316,6 @@ print(f"R-squared Score: {r2:.2f}")
 
 # > 0.7 is generally good for regression
 # """
-
-# Create a functional button that the user presses to predict the diamond prices.
-if st.button("Predict price"):
-     price = model.predict(X_input)[0]  # single float
-     st.success(f"Estimated price of the diamond specified : ${price:,.2f} ")
-
-
-
-
 
 
 
