@@ -1,395 +1,170 @@
-import pandas as pd 
-import numpy as np 
-import seaborn as sns 
-import matplotlib.pyplot as plt 
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 import streamlit as st
+from streamlit_option_menu import option_menu
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from PIL import Image
 from sklearn.metrics import mean_squared_error, r2_score
 
-# ------------------------- STREAMLIT SETUP -------------------------- #
+# =================== PAGE CONFIG =================== #
+st.set_page_config(page_title="Diamond Price Predictor", page_icon="D", layout="centered")
 
-st.set_page_config(page_title="💎 Diamond Price Estimator", page_icon="💰", layout="centered")
+# =================== LOAD DATA =================== #
+df = pd.read_csv("diamonds.csv")
+df = df.drop(columns=['Unnamed: 0'])
 
-# Sidebar: branding
-st.sidebar.image("https://i.imgur.com/ExdKOOz.png", width=200)
-st.sidebar.title("Kamusi Data Lab")
-st.sidebar.markdown("Predict your diamond's price using Machine Learning 💻")
+# =================== SIDEBAR =================== #
+with st.sidebar:
+    st.image("diamondphoto.png", width=250)
+    st.title("Diamond Predictor")
+    st.markdown("💎 *Predict your diamond’s value using Machine Learning.*")
 
-# Main Title
-st.title("💎 Diamond Price Prediction App")
+    selected = option_menu(
+        "",
+        ["Home", "Predict", "EDA", "About"],
+        icons=["house", "gem", "bar-chart", "info-circle"],
+        menu_icon='<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Brilliant-cut_diamond.svg/1024px-Brilliant-cut_diamond.svg.png" width="30">',
+        default_index=0,
+    )
+
+# =================== CSS STYLING =================== #
 st.markdown("""
-<style>
-.big-font {
-     font-size:20px;
-     font-weight:600;
-     color:#2f4f4f;
-}
-</style>
+    <style>
+        .big-font {
+            font-size:22px !important;
+            font-weight:600;
+            color:#0e1117;
+        }
+        .stButton > button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border-radius: 10px;
+            padding: 0.5em 1em;
+        }
+    </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', unsafe_allow_html=True)
-
-
-# -------------------------- USER INPUT -------------------------- #
-data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
-df = pd.read_csv(data) 
-# Layout input columns
-col1, col2 = st.columns(2)
-
-with col1:
-     carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
-     color_categories = df['color'].astype('category').cat.categories
-     color = st.selectbox("Color", ["D", "E", "F", "G", "H", "I", "J"])
-     color_code = list(color_categories).index(color)
-     z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
-
-with col2:
-    st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
-
-
-# ----------------- LOAD DATA --------------------- #
-
-# PHASE 1
-# Data acquisition and exploration.
-# 1. a) Load the dataset.
-# data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
-# df = pd.read_csv(data) # Convert csv into dataframe using pandas.
-data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
-df = pd.read_csv(data) # Convert csv into dataframe using pandas.
-
-
-print(df.head(10)) # The data looks good
-print(df.shape) # (53940 rows, 11 columns) Good data to work with
-print(df.columns) #['Unnamed: 0', 'carat', 'cut', 'color', 'clarity', 'depth', 'table','price', 'x', 'y', 'z']
-data_types = df.dtypes
-print(data_types) # Investigating the data types in the dataset
-
-# """
-# Unnamed: 0      int64
-# carat         float64
-# cut            object
-# color          object
-# clarity        object
-# depth         float64
-# table         float64
-# price           int64
-# x             float64
-# y             float64
-# z             float64
-# """
-
-# df = df.drop(columns=['Unnamed: 0']) # To eliminate the first column showing row indexes. 
-
-print(df.describe()) # For some descriptive statistics.
-
-# """ 
-#           carat         depth         table         price             x             y             z
-# count  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000  53940.000000
-# mean       0.797940     61.749405     57.457184   3932.799722      5.731157      5.734526      3.538734
-# std        0.474011      1.432621      2.234491   3989.439738      1.121761      1.142135      0.705699
-# min        0.200000     43.000000     43.000000    326.000000      0.000000      0.000000      0.000000
-# 25%        0.400000     61.000000     56.000000    950.000000      4.710000      4.720000      2.910000
-# 50%        0.700000     61.800000     57.000000   2401.000000      5.700000      5.710000      3.530000
-# 75%        1.040000     62.500000     59.000000   5324.250000      6.540000      6.540000      4.040000
-# max        5.010000     79.000000     95.000000  18823.000000     10.740000     58.900000     31.800000 
-# """
-
-# 1. b) Explanatory data analysis.
-
-print(df.isnull().sum().sort_values(ascending = False))
-# This will show me the number of empty cells per row with
-# empty columns such that I can find out with columns to let go
-# depending on the percentage number of empty cells w.r.t the entire dataset.
-
-# """
-# dtype: object
-# Unnamed: 0    0
-# carat         0
-# cut           0
-# color         0
-# clarity       0
-# depth         0
-# table         0
-# price         0
-# x             0
-# y             0
-# z             0
-#      """
-
-# This indicates that the data we are working with is of very high quality.
-
-# Just for the sake, I'll use a for oop to iterate over the dataset columns
-# The purpose of this will be to determine the percentage number of empty cells w.r.t the entire dataset.
-
-for column in df.columns:
-     percentage_empty = df[column].isnull().mean()
-     print(column + " ---> " + str(percentage_empty)+ " '%' empty cells.")
-
-# """ 
-# Unnamed: 0 ---> 0.0 % empty cells.
-# carat ---> 0.0 % empty cells.
-# cut ---> 0.0 % empty cells.
-# color ---> 0.0 % empty cells.
-# clarity ---> 0.0 % empty cells.
-# depth ---> 0.0 % empty cells.
-# table ---> 0.0 % empty cells.
-# price ---> 0.0 % empty cells.
-# x ---> 0.0 % empty cells.
-# y ---> 0.0 % empty cells.
-# z ---> 0.0 % empty cells.
-# """     
-
-# Since we don't have missing data to deal with, 
-# There won't be any need to eliminate rows or columns for that reason, for now.
-
-# In the event that we had missing values and the percentage was high,
-# Would then have to eliminate the given columns,
-# But if it wasn't then we would simply use the .fillna() method and the .join() method to fill the empty cells with the mode/median/mean of the given column.
-
-
-# ----------------- MODEL PREP --------------------- #
-
-# PHASE 2
-# Feature engineering and pre-processing. 
-
-# 2. a) Let's start with feature selection using a correlation heat map.
-
-# Encode categorical columns i.e.
-
-# """ 
-# cut            object
-# color          object
-# clarity        object
-# """
-
-df_encoded = df.copy()
-for col in ['cut', 'color', 'clarity']:
-     df_encoded[col] = df_encoded[col].astype('category').cat.codes
-
-# Compute correlation matrix
-corr = df_encoded.corr()
-
-# Plot heatmap
-plt.figure(figsize=(10, 8))
-sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f")
-plt.title('Correlation Heatmap - Diamond Dataset')
-plt.tight_layout()
-# plt.show()
-
-# """ 
-# Most Important Features to Include in Your Model:
-# These are features with strong correlation to price (usually above 0.7 is considered strong):
-
-# 1) carat
-
-# 2) x, y, z (note: these are strongly correlated with carat, so might be redundant — more on that below)
-
-# High risk of Multicollinearity 
-# Check this:
-
-# carat vs x: 0.98
-
-# x vs y: 0.97
-
-# x vs z: 0.97
-
-# etc...
-
-# These values show multi-collinearity — when features are too strongly correlated with each other. That’s bad for linear regression because:
-
-# It causes instability in coefficient estimates.
-
-# The model may "double-count" similar information.
-
-# Solution:
-# Use only one or two of them:
-
-# Either use just carat (it captures size best), OR
-
-# Use one dimension like x instead of all three.
-
-# In Summary:
-# BEST FEATURES FOR LINEAR REGRESSION:
-# carat (top predictor)
-
-# Optionally: one of x, y, or z — but not all
-
-# Maybe color — weak, but may help
-
-# Drop: depth, cut, clarity, table — not helpful or redundant
-
-# For this case, I will use "CARAT", "Z", and "COLOR"
-# """
-
-# We now generate a feature importance bar plot to further check the outcome of the heat map results.
-# Compute correlation matrix
-corr_matrix = df_encoded.corr()
-
-# Get correlation with 'price' and sort
-price_corr = corr_matrix['price'].drop('price')  # Remove self-correlation (1.0)
-price_corr_sorted = price_corr.sort_values(ascending = True)  # Ascending for horizontal bars
-
-# Plot
-plt.figure(figsize=(10, 6))
-sns.barplot(
-     x = price_corr_sorted,
-     y = price_corr_sorted.index,
-     hue = price_corr_sorted.index,  # Assign hue
-     palette = 'coolwarm',
-     dodge = False,                  # Keeps it as a single bar per row
-     legend = False                  # Optional: turns off extra legend
-)
-plt.title('Feature Correlation with Diamond Price')
-plt.xlabel('Correlation Coefficient')
-plt.ylabel('Feature')
-plt.tight_layout()
-# plt.show() # From the results, we will be using carat, z, and color.
-
-# PHASE 3 : Model building and Pre-processing!
-
-# We shall be using the linear regression model and the relevant libraries have been imported.
-# We shall evaluate the model using the mean squared error, r-squared score
-
-# Create a copy of the original dataset, such that we may refer to it later if need be.
-# Keeping only relevant features
-df_cleaned = df[["carat", "z", "color", "price"]].copy()
-
-# We then encode 'color' as categorical codes.
-df_cleaned['color'] = df_cleaned['color'].astype('category').cat.codes
-
-# Here we can now define the dependant variables and the independent variables according to
-# the selected features (3 in number) and the target feature (price).
-X = df_cleaned[['carat', 'z', 'color']]
-y = df_cleaned['price']
-
-# Let's go on to split the data into training data and validation data.
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 42)
-
-# random_state = 42 means, It's just a common nerd joke — from The Hitchhiker’s Guide to the Galaxy, 
-# where “42” is the answer to the ultimate question of life
-# But any number can be used — like 1, 999, etc. 
-# It just has to be the same every time for reproducibility.
-
-# test_size = 0.25 means, we have dictated that the testing data is 25% of the dataset,
-# which is the default 75-25 by python. Meaning, for every 100 diamonds in the dataset,
-# 75 train, while 25 test.
-
-# We can now train the model.
-model = LinearRegression() # We chose linear regression due to the instructions in the question.
-model.fit(X_train, y_train) # We fit the model using the training data.
-# This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
-
-
-
-# Create a properly shaped input DataFrame
-X_input = pd.DataFrame([[carat, z, color_code]], columns = ['carat', 'z', 'color'])
-
-# Create a functional button that the user presses to predict the diamond prices.
-if st.button("Predict price"):
-     y_pred = model.predict(X_input)[0] # Extract float
-     y_pred = max(y_pred, 0)
-     st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f}")
-# ----------------- INPUT PROCESSING --------------------- #
-
-# Encode color
-color_mapping = {'D': 0, 'E': 1, 'F': 2, 'G': 3, 'H': 4, 'I': 5, 'J': 6}
-color_encoded = color_mapping[color]
-
-input_data = pd.DataFrame([[carat, z, color_encoded]], columns=['carat', 'z', 'color'])
-
-
-# ----------------- PREDICTION --------------------- #
-# Let us now make some predictions.
-prediction = model.predict(input_data)
-st.success(f"Estimated Diamond Price: $ {prediction[0]:,.2f}")
-
-
-# ----------------- OPTIONAL METRICS --------------------- #
-# After creating some predictions, we can now evaluate the model performance.
-# mse = mean_squared_error(y_test, y_pred)
-# r2 = r2_score(y_test, y_pred)
-# rmse = np.sqrt(mse)
-mse = mean_squared_error(y_test, model.predict(X_test))
-r2 = r2_score(y_test, model.predict(X_test))
-rmse = np.sqrt(mse)
-
-# print(f"Root Mean Squared Error: {rmse:.2f}")
-# print(f"Mean Squared Error: {mse:.2f}")
-# print(f"R-squared Score: {r2:.2f}")
-st.markdown(f"""
-### 📈 Model Performance:
-- **R-squared Score:** {r2:.2f}
-- **Root Mean Squared Error:** ${rmse:.2f}
-- **Mean Squared Error:** {mse:,.2f}
-""")
-
-# Results 
-# Root Mean Squared Error: 1471.32
-# Mean Squared Error: 2164788.68
-# R-squared Score: 0.86
-
-# Interpretation of results.
-# """ 
-# What do these mean?
-
-# Mean Squared Error (MSE): Measures how far predictions are from actual values. Lower is better.
-
-# R² Score: Proportion of variance in price explained by the features.
-
-
-# 1.0 = perfect prediction
-
-# 0 = model does no better than mean
-
-# > 0.7 is generally good for regression
-# """
-
-# Create a functional button that the user presses to predict the diamond prices.
-y_pred = model.predict(X_test)
-if st.button("Predict price"):
-     predicted_price = model.predict(df_encoded)[0]
-     st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f} ")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# =================== HOME TAB =================== #
+if selected == "Home":
+    st.title(" Diamond Price Predictor")
+    st.markdown(
+        "Welcome to the Diamond Price Predictor. "
+        "This app uses Machine Learning to estimate diamond prices based on carat, height, and color."
+    )
+    st.image("diamondphoto.png", caption="Diamonds are forever 💍", use_container_width=True)
+
+# =================== PREDICT TAB =================== #
+elif selected == "Predict":
+    st.title(" Predict Your Diamond's Price")
+    st.markdown('<p class="big-font">Enter your diamond\'s features below:</p>', unsafe_allow_html=True)
+
+    color_categories = df['color'].astype('category').cat.categories
+
+    col1, col2 = st.columns(2)
+    with col1:
+        carat = st.slider("Carat", 0.2, 5.0, 0.5, 0.01)
+        color = st.selectbox("Color", list(color_categories))
+        color_code = list(color_categories).index(color)
+    with col2:
+        z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
+
+    # Prepare model
+    df_model = df[['carat', 'z', 'color', 'price']]
+    df_model['color'] = df_model['color'].astype('category').cat.codes
+    X = df_model[['carat', 'z', 'color']]
+    y = df_model['price']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    # Predict
+    if st.button(" Predict Price"):
+        input_data = pd.DataFrame([[carat, z, color_code]], columns=['carat', 'z', 'color'])
+        prediction = model.predict(input_data)[0]
+        st.success(f"Estimated price of the diamond: **${prediction:,.2f}**")
+
+# =================== EDA TAB =================== #
+elif selected == "EDA":
+    st.title("Exploratory Data Analysis")
+
+    # Encode for heatmap
+    df_encoded = df.copy()
+    for col in ['cut', 'color', 'clarity']:
+        df_encoded[col] = df_encoded[col].astype('category').cat.codes
+
+    # Correlation heatmap
+    corr = df_encoded.corr()
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f", ax=ax)
+    st.pyplot(fig)
+
+    # Feature correlation bar chart
+    price_corr = corr['price'].drop('price').sort_values()
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    sns.barplot(x=price_corr, y=price_corr.index, palette='coolwarm', ax=ax2)
+    ax2.set_title("Feature Correlation with Price")
+    st.pyplot(fig2)
+
+# =================== ABOUT TAB =================== #
+
+elif selected == "About":
+    st.title("About This App")
+
+    st.markdown("""
+    Welcome to the **Diamond Price Predictor**, a smart web application designed to help you estimate the market value of diamonds using machine learning. Whether you're a gem enthusiast, jeweler, or just curious, this tool simplifies price prediction based on key characteristics like **carat weight**, **color**, and **height (z)**.
+    """)
+
+    st.markdown("### What It Does")
+    st.markdown("""
+    This app uses a **Linear Regression Model** trained on a dataset of over 53,000 real diamonds to provide a near-accurate price estimate. By simply adjusting the input sliders for your diamond’s properties, you’ll get a prediction instantly without needing advanced knowledge in data science.
+    """)
+
+    st.markdown("### How It Works")
+    st.markdown("""
+    - **Machine Learning Algorithm:** Linear Regression  
+    - **Dataset:** 53,940 diamond entries from a trusted source  
+    - **Features Used:**
+        - Carat (weight)
+        - Z (height in mm)
+        - Color (graded D to J)  
+    - **Model Evaluation:**
+        - R² Score ≈ 0.86  
+        - Root Mean Squared Error ≈ $1,471  
+    """)
+
+    st.markdown("### Why It Matters")
+    st.markdown("""
+    In the real world, diamond prices are influenced by various factors, and estimating their value can be complex. This app uses **data-driven insights** to give an informed estimate whether you're:
+    - Shopping or selling diamonds 
+    - Learning data science 
+    - Exploring EDA and modeling concepts  
+    """)
+
+    st.markdown("### Developer Info")
+    st.markdown("""
+    This Diamond Price Predictor was developed by a passionate team of students from **Strathmore University**:
+
+    - **Ayden Ngnintedem Demanou** — BSc. Statistics & Data Science  
+    - **Patrick Dhatemwa** — BSc. Statistics & Data Science  
+    - **Ian Paul Mulindwa** — BSc. Statistics & Data Science  
+    - **Francis Gitau** — BSc. Statistics & Data Science  
+    - **Cynthia Musangi** — BSc. Statistics & Data Science  
+
+    **Mission:** To make machine learning tools accessible and insightful for everyone.  
+    **Skills:** Python, Data Analysis, Streamlit, scikit-learn, Data Visualization, Communication  
+    """)
+
+
+    st.markdown("### Tools Used")
+    st.markdown("""
+    - **Streamlit** – for building the web app interface  
+    - **Pandas, NumPy, Seaborn, Matplotlib** – for data handling & visualization  
+    - **scikit-learn** – for training the regression model  
+    - **HTML & CSS** – for styling and layout  
+    """)
+
+    st.markdown("> _“Diamonds are forever, but accurate pricing makes them shine even brighter.”_ ")
