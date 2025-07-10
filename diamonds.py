@@ -42,14 +42,15 @@ with col1:
      z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
 
 with col2:
-     st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
+    st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
 
 
+# ----------------- LOAD DATA --------------------- #
 
 # PHASE 1
 # Data acquisition and exploration.
 # 1. a) Load the dataset.
-data = r"C:\Users\patri\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
+data = r"C:\Users\mulix\Downloads\diamonds.csv.zip" # I've used an absolute path. Use relative path to access the data.
 df = pd.read_csv(data) # Convert csv into dataframe using pandas.
 
 
@@ -73,7 +74,8 @@ print(data_types) # Investigating the data types in the dataset
 # z             float64
 # """
 
-df = df.drop(columns=['Unnamed: 0']) # To eliminate the first column showing row indexes. 
+# df = df.drop(columns=['Unnamed: 0']) # To eliminate the first column showing row indexes. 
+
 print(df.describe()) # For some descriptive statistics.
 
 # """ 
@@ -141,6 +143,7 @@ for column in df.columns:
 # But if it wasn't then we would simply use the .fillna() method and the .join() method to fill the empty cells with the mode/median/mean of the given column.
 
 
+# ----------------- MODEL PREP --------------------- #
 
 # PHASE 2
 # Feature engineering and pre-processing. 
@@ -177,7 +180,7 @@ plt.tight_layout()
 
 # 2) x, y, z (note: these are strongly correlated with carat, so might be redundant — more on that below)
 
-# High risk of Multi-collinearity 
+# High risk of Multicollinearity 
 # Check this:
 
 # carat vs x: 0.98
@@ -244,10 +247,8 @@ plt.tight_layout()
 # We shall evaluate the model using the mean squared error, r-squared score
 
 # Create a copy of the original dataset, such that we may refer to it later if need be.
-df_cleaned = df.copy()
-
-# Keep only the selected features from the engineering process and the target as well.
-df_cleaned = df_cleaned[['carat', 'z', 'color', 'price']]
+# Keeping only relevant features
+df_cleaned = df[["carat", "z", "color", "price"]].copy()
 
 # We then encode 'color' as categorical codes.
 df_cleaned['color'] = df_cleaned['color'].astype('category').cat.codes
@@ -274,18 +275,33 @@ model = LinearRegression() # We chose linear regression due to the instructions 
 model.fit(X_train, y_train) # We fit the model using the training data.
 # This tells the model to “Find the best straight-line relationship between carat, z, and color and the target price.”
 
+# ----------------- INPUT PROCESSING --------------------- #
+
+# Encode color
+color_mapping = {'D': 0, 'E': 1, 'F': 2, 'G': 3, 'H': 4, 'I': 5, 'J': 6}
+color_encoded = color_mapping[color]
+
+input_data = pd.DataFrame([[carat, z, color_encoded]], columns=['carat', 'z', 'color'])
+
+
+# ----------------- PREDICTION --------------------- #
 # Let us now make some predictions.
-y_pred = model.predict(X_test)
+prediction = model.predict(input_data)
+st.success(f"Estimated Diamond Price: $ {prediction[0]:,.2f}")
 
 
+# ----------------- OPTIONAL METRICS --------------------- #
 # After creating some predictions, we can now evaluate the model performance.
-mse = mean_squared_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+mse = mean_squared_error(y_test, model.predict(X_test))
+r2 = r2_score(y_test, model.predict(X_test))
 rmse = np.sqrt(mse)
 
-print(f"Root Mean Squared Error: {rmse:.2f}")
-print(f"Mean Squared Error: {mse:.2f}")
-print(f"R-squared Score: {r2:.2f}")
+st.markdown(f"""
+### 📈 Model Performance:
+- **R-squared Score:** {r2:.2f}
+- **Root Mean Squared Error:** ${rmse:.2f}
+- **Mean Squared Error:** {mse:,.2f}
+""")
 
 # Results 
 # Root Mean Squared Error: 1471.32
@@ -300,6 +316,7 @@ print(f"R-squared Score: {r2:.2f}")
 
 # R² Score: Proportion of variance in price explained by the features.
 
+
 # 1.0 = perfect prediction
 
 # 0 = model does no better than mean
@@ -308,12 +325,10 @@ print(f"R-squared Score: {r2:.2f}")
 # """
 
 # Create a functional button that the user presses to predict the diamond prices.
+y_pred = model.predict(X_test)
 if st.button("Predict price"):
      predicted_price = model.predict(df_encoded)[0]
      st.success(f"Estimated price of the diamond specified : ${y_pred:,.2f} ")
-
-
-
 
 
 
