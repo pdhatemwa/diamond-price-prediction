@@ -44,9 +44,6 @@ with col1:
      color_code = list(color_categories).index(color)
      z = st.slider("Height (z, mm)", 2.0, 6.0, 3.0, 0.1)
 
-with col2:
-     st.text("Note: Only 'carat', 'z' and 'color' are used in prediction.")
-
 
 
 # PHASE 1
