@@ -2,7 +2,6 @@ streamlit
 scikit-learn
 matplotlib
 pandas
-RandomForestRegressor    
+LinearRegression    
 numpy
-pickle
 seaborn
