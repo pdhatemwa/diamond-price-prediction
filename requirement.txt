@@ -1,7 +1,8 @@
 streamlit
+seaborn
 scikit-learn
 matplotlib
 pandas
 LinearRegression    
 numpy
-seaborn
+
