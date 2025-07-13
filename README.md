@@ -84,8 +84,8 @@ We developed a **cloud-based app** that allows users to input diamond details an
 - Responsive and intuitive layout
 
 ### 🔗 Live App:
-👉 [Click here to open the Diamond Price Predictor](https://your-app-link.streamlit.app)  
-*(Make sure the app is publicly accessible at the time of submission)*
+👉 [Click here to open the Diamond Price Predictor](https://diamondpricepredictions.streamlit.app/)  
+
 
 ---
 
