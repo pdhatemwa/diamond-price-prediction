@@ -5,4 +5,4 @@ matplotlib
 pandas
 LinearRegression    
 numpy
-
+streamlit_option_menu
